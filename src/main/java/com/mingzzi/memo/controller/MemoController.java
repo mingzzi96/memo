@@ -50,7 +50,7 @@ public class MemoController {
     @PutMapping("/memos/{id}")
     public Long updateMemo(@PathVariable Long id, @RequestBody MemoRequestDto requestDto){
         // 해당 메모가 DB에 존재하는지 확인한다.
-        // containsKey는 Map의 자료구조에서 key부분에 해당하는 값이 있는지 없는지 판단해준다.
+        // containsKey는 Map의 자료구조에서 key부분에 해당하는 값이  있는지 없는지 판단해준다.
         if(memoList.containsKey(id)){
             // 존재한다면 해당 메모를 가져온다.
             Memo memo = memoList.get(id);
