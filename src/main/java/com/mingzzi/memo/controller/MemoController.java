@@ -2,78 +2,47 @@ package com.mingzzi.memo.controller;
 
 import com.mingzzi.memo.dto.MemoRequestDto;
 import com.mingzzi.memo.dto.MemoResponseDto;
-import com.mingzzi.memo.entity.Memo;
+import com.mingzzi.memo.service.MemoService;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
 public class MemoController {
 
-    // Long 에는 ID 값이 들어간다.
-    private final Map<Long, Memo> memoList = new HashMap<>();
+    private final JdbcTemplate jdbcTemplate;
+
+    public MemoController(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @PostMapping("/memos")
-    public MemoResponseDto createMemo(@RequestBody MemoRequestDto requestDto){
-        // RequestDto -> Entity
-        Memo memo = new Memo(requestDto);
-
-        // Memo Max ID Check (중복된 ID를 사용하면 안되기 때문)
-        // memoList에 값이 0 보다 크다면 가장 마지막 값에 + 1을 해서 중복되지 않도록 해준다.
-        // 만약 값이 0과 같거나 작은경우 1을 반환한다.
-        Long maxId = memoList.size() > 0 ? Collections.max(memoList.keySet()) + 1 : 1;
-        memo.setId(maxId);
-
-        // DB 저장
-        memoList.put(memo.getId(), memo);
-
-        // Entity -> ResponseDto
-        MemoResponseDto memoResponseDto = new MemoResponseDto(memo);
-
-        return memoResponseDto;
+    public MemoResponseDto createMemo(@RequestBody MemoRequestDto requestDto) {
+        // Service
+        MemoService memoService = new MemoService(jdbcTemplate);
+        return memoService.createMemo(requestDto);
     }
 
     @GetMapping("/memos")
-    public List<MemoResponseDto> getMemos(){
-        // Map to List
-        // values로 memoList에 있는 값을 하나하나 꺼내오고, stream이 for 문 마냥 각 아이템(Memo)을 돌면서
-        // MemoResponseDto 생성자로 변환을 해준다. 그리고 그 변환된 값들을 모아서 배열로 만들어준다.
-        List<MemoResponseDto> responseList = memoList.values().stream().map(MemoResponseDto::new).toList();
-
-        return responseList;
+    public List<MemoResponseDto> getMemos() {
+        // Service
+        MemoService memoService = new MemoService(jdbcTemplate);
+        return memoService.getMemos();
     }
 
     @PutMapping("/memos/{id}")
-    public Long updateMemo(@PathVariable Long id, @RequestBody MemoRequestDto requestDto){
-        // 해당 메모가 DB에 존재하는지 확인한다.
-        // containsKey는 Map의 자료구조에서 key부분에 해당하는 값이  있는지 없는지 판단해준다.
-        if(memoList.containsKey(id)){
-            // 존재한다면 해당 메모를 가져온다.
-            Memo memo = memoList.get(id);
-
-            // 메모를 수정한다.
-            memo.update(requestDto);
-
-            // 클라이언트에 반환해줄 값을 return
-            return memo.getId();
-        }else {
-            throw new IllegalArgumentException("선택한 메모가 존재하지 않습니다.");
-        }
+    public Long updateMemo(@PathVariable Long id, @RequestBody MemoRequestDto requestDto) {
+        // Service
+        MemoService memoService = new MemoService(jdbcTemplate);
+        return memoService.updateMemo(id, requestDto);
     }
 
     @DeleteMapping("/memos/{id}")
-    public Long deleteMemo(@PathVariable Long id){
-        // 해당 메모가 DB에 존재하는지 확인한다.
-        if(memoList.containsKey(id)){
-            // 존해한다면 해당 메모를 삭제한다.
-            memoList.remove(id);
-            return id;
-        }else {
-            throw new IllegalArgumentException("선택한 메모가 존재하지 않습니다.");
-        }
+    public Long deleteMemo(@PathVariable Long id) {
+        // Service
+        MemoService memoService = new MemoService(jdbcTemplate);
+        return memoService.deleteMemo(id);
     }
 }
